@@ -53,7 +53,7 @@ export function verifyEnvelope(manifestBytes, envelope, publicKey) {
     throw new Error("manifest envelope hash or schema is invalid");
   }
   const signature = Buffer.from(envelope.signature || "", "base64");
-  if (signature.length !== 64 || !crypto.verify(null, manifestBytes, crypto.createPublicKey(publicKey), signature)) {
+  if (signature.length !== 64 || !crypto.verify(null, manifestBytes, publicKey?.type === "public" ? publicKey : crypto.createPublicKey(publicKey), signature)) {
     throw new Error("manifest envelope signature verification failed");
   }
   return true;
