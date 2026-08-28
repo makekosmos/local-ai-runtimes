@@ -1,0 +1,26 @@
+name: Runtime metadata quality
+
+on:
+  pull_request:
+    paths:
+      - "runtimes.manifest.json"
+      - "scripts/**"
+      - ".github/workflows/**"
+      - "README.md"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate runtime metadata
+        run: node scripts/validate-manifest.mjs
