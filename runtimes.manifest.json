@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "migration-in-progress",
+  "verification_contract": {
+    "required_before_release": ["sha256", "size", "signature", "source", "licences"],
+    "installation": ["https", "signature", "sha256", "size", "safe_archive", "atomic_extract", "rollback"]
+  },
+  "runtimes": [
+    {
+      "id": "whisper-cpu",
+      "version": "1.9.1",
+      "platform": "windows",
+      "architecture": "x64",
+      "backend": "cpu",
+      "archive": "whisper-cpu-bin-x64-v1.9.1.zip",
+      "size": 1116526,
+      "sha256": null,
+      "source": null,
+      "signing_key_id": null,
+      "migration_status": "legacy-git-asset"
+    },
+    {
+      "id": "whisper-vulkan",
+      "version": "1.9.1",
+      "platform": "windows",
+      "architecture": "x64",
+      "backend": "vulkan",
+      "archive": "whisper-vulkan-bin-x64-v1.9.1.zip",
+      "size": 24532865,
+      "sha256": null,
+      "source": null,
+      "signing_key_id": null,
+      "migration_status": "legacy-git-asset"
+    },
+    {
+      "id": "whisper-vulkan-r2",
+      "version": "1.9.1-r2",
+      "platform": "windows",
+      "architecture": "x64",
+      "backend": "vulkan",
+      "archive": "whisper-vulkan-bin-x64-v1.9.1-r2.zip",
+      "size": 25040303,
+      "sha256": null,
+      "source": null,
+      "signing_key_id": null,
+      "migration_status": "legacy-git-asset"
+    }
+  ]
+}
