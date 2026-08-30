@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+node scripts/validate-manifest.mjs
+node --test scripts/validate-manifest.test.mjs
+python -m unittest scripts/inspect_archives_test.py
+node scripts/check-json.mjs

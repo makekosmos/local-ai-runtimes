@@ -1,9 +1,12 @@
 {
   "schema_version": 1,
+  "sequence": 1,
+  "generated_at": "2026-08-30T00:00:00Z",
   "status": "migration-in-progress",
-  "verification_contract": {
-    "required_before_release": ["sha256", "size", "signature", "source", "licences"],
-    "installation": ["https", "signature", "sha256", "size", "safe_archive", "atomic_extract", "rollback"]
+  "signing_key_id": null,
+  "compatibility_window": {
+    "ends_at": "2026-12-31T23:59:59Z",
+    "policy": "Historical source blobs are download-only compatibility inputs and MUST NOT execute until signature, hash, size, archive, platform, and licence verification succeeds."
   },
   "runtimes": [
     {
@@ -12,12 +15,21 @@
       "platform": "windows",
       "architecture": "x64",
       "backend": "cpu",
-      "archive": "whisper-cpu-bin-x64-v1.9.1.zip",
-      "size": 1116526,
-      "sha256": null,
+      "accelerator": "none",
+      "entrypoints": [
+        "Release/whisper-cli.exe"
+      ],
+      "archive": {
+        "name": "whisper-cpu-bin-x64-v1.9.1.zip",
+        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-cpu-bin-x64-v1.9.1.zip",
+        "sha256": "7a17d804ab6e0fc992d356b4d3c434764f9191c13f0da6b8c219e7bc19e8ffcf",
+        "size": 1116526,
+        "format": "zip"
+      },
       "source": null,
-      "signing_key_id": null,
-      "migration_status": "legacy-git-asset"
+      "build": null,
+      "licences": [],
+      "migration_status": "quarantined-legacy-source-blob"
     },
     {
       "id": "whisper-vulkan",
@@ -25,12 +37,21 @@
       "platform": "windows",
       "architecture": "x64",
       "backend": "vulkan",
-      "archive": "whisper-vulkan-bin-x64-v1.9.1.zip",
-      "size": 24532865,
-      "sha256": null,
+      "accelerator": "vulkan",
+      "entrypoints": [
+        "Release/whisper-cli.exe"
+      ],
+      "archive": {
+        "name": "whisper-vulkan-bin-x64-v1.9.1.zip",
+        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-vulkan-bin-x64-v1.9.1.zip",
+        "sha256": "d9be5497fae76a35eff0a44141d51bfe30aa8961afe9a13dea7f66b425fa4ca7",
+        "size": 24532865,
+        "format": "zip"
+      },
       "source": null,
-      "signing_key_id": null,
-      "migration_status": "legacy-git-asset"
+      "build": null,
+      "licences": [],
+      "migration_status": "quarantined-legacy-source-blob"
     },
     {
       "id": "whisper-vulkan-r2",
@@ -38,12 +59,22 @@
       "platform": "windows",
       "architecture": "x64",
       "backend": "vulkan",
-      "archive": "whisper-vulkan-bin-x64-v1.9.1-r2.zip",
-      "size": 25040303,
-      "sha256": null,
+      "accelerator": "vulkan",
+      "entrypoints": [
+        "Release/whisper-cli.exe",
+        "Release/whisper-server.exe"
+      ],
+      "archive": {
+        "name": "whisper-vulkan-bin-x64-v1.9.1-r2.zip",
+        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-vulkan-bin-x64-v1.9.1-r2.zip",
+        "sha256": "c26060f8fe02dce053d73a6806be517c3f06f2ff54fe0f86b69e58225b11fa1e",
+        "size": 25040303,
+        "format": "zip"
+      },
       "source": null,
-      "signing_key_id": null,
-      "migration_status": "legacy-git-asset"
+      "build": null,
+      "licences": [],
+      "migration_status": "quarantined-legacy-source-blob"
     }
   ]
 }

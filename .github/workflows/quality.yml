@@ -1,10 +1,13 @@
-name: Runtime metadata quality
+name: Runtime supply-chain quality
 
 on:
   pull_request:
     paths:
       - "runtimes.manifest.json"
+      - "release-bom.schema.json"
       - "scripts/**"
+      - "docs/**"
+      - ".githooks/**"
       - ".github/workflows/**"
       - "README.md"
   push:
@@ -22,11 +25,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Reject runtime binaries in active source
+        shell: bash
+        run: |
+          if git ls-files '*.zip' '*.exe' '*.dll' '*.bin' | grep -q .; then
+            echo 'Runtime binaries must be immutable release assets, not source files.' >&2
+            exit 1
+          fi
       - name: Validate runtime metadata
         run: node scripts/validate-manifest.mjs
-      - name: Run signed manifest tests
+      - name: Run metadata and envelope tests
         run: node --test scripts/validate-manifest.test.mjs
-      - name: Run secret-free dry-run
-        run: node scripts/dry-run.mjs
+      - name: Run archive safety tests
+        run: python -m unittest scripts/inspect_archives_test.py
+      - name: Prove deterministic secret-free dry-run
+        shell: bash
+        run: |
+          first="$(node scripts/dry-run.mjs)"
+          second="$(node scripts/dry-run.mjs)"
+          test "$first" = "$second"
+          printf '%s\n' "$first"
+      - name: Validate JSON formatting
+        run: node scripts/check-json.mjs
       - name: Actionlint
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2
