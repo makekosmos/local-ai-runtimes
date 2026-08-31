@@ -28,7 +28,7 @@ jobs:
         with:
           bun-version: 1.3.14
       - name: Install dependencies and hooks
-        run: bun install --frozen-lockfile
+        run: bun install
       - name: Reject runtime binaries in active source
         shell: bash
         run: |

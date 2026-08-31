@@ -11,11 +11,13 @@ No production runtime release or production signature is created by this reposit
 ## Local verification
 
 ```powershell
-bun install --frozen-lockfile
+bun install
 bun run check
 ```
 
-The pinned install configures repository-owned pre-commit and pre-push hooks.
+The repository has no package dependencies, so Bun intentionally produces no
+lockfile. The pinned Bun 1.3.14 install configures repository-owned pre-commit
+and pre-push hooks without downloading packages.
 The dry-run is deterministic and offline. It uses the public RFC 8032 test vector, performs tag/release/sequence/timestamp preflight before signing, signs the exact candidate bytes, and verifies key ID, signature, hash, and size. It never reads a production secret.
 
 Archive validation uses only the Python standard library and rejects traversal, absolute/drive/backslash paths, symlinks, encryption, case collisions, undeclared files, ZIP bombs, missing licences, bad hash/size, and non-x64 PE entrypoints.
