@@ -2,14 +2,6 @@ name: Runtime supply-chain quality
 
 on:
   pull_request:
-    paths:
-      - "runtimes.manifest.json"
-      - "release-bom.schema.json"
-      - "scripts/**"
-      - "docs/**"
-      - ".githooks/**"
-      - ".github/workflows/**"
-      - "README.md"
   push:
     branches: [main]
 
