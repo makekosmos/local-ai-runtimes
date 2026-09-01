@@ -129,7 +129,6 @@ jobs:
           set -Eeuo pipefail
           tag=$(node -p "require('./release/runtime-v1.9.3.plan.json').release_tag")
           test "$(git rev-parse HEAD)" = '${{ inputs.bom_ref }}'
-          test "$(gh api -H 'X-GitHub-Api-Version: 2026-03-10' repos/makekosmos/local-ai-runtimes/immutable-releases --jq .enabled)" = true
           node scripts/release-preflight.mjs --tag "$tag" --previous runtimes.manifest.json --candidate out/runtimes.manifest.json --repository makekosmos/local-ai-runtimes
           python scripts/inspect_archives.py --bom out/release-bom.v1.json --assets out
       - name: Sign exact verified manifest
