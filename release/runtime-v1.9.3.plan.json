@@ -34,8 +34,8 @@
       "archive": {
         "name": "whisper-cpu-bin-x64-v1.9.3.zip",
         "url": "https://github.com/makekosmos/local-ai-runtimes/releases/download/runtime-v1.9.3/whisper-cpu-bin-x64-v1.9.3.zip",
-        "sha256": "a08cc9bb5cc59bab5033051c2d31868957b8c69b53f527ec7030324451ded8b7",
-        "size": 1434267,
+        "sha256": "2464c8ecdc070ccdba079b363943e979708443180fd6dda12d7d0801beeb5954",
+        "size": 1436012,
         "format": "zip",
         "files": [
           "LICENSE.whisper.cpp.txt",
@@ -77,8 +77,8 @@
       "archive": {
         "name": "whisper-vulkan-bin-x64-v1.9.3.zip",
         "url": "https://github.com/makekosmos/local-ai-runtimes/releases/download/runtime-v1.9.3/whisper-vulkan-bin-x64-v1.9.3.zip",
-        "sha256": "61b2ae2cdf54eb8bb06bf22e7e5cc9450551f1e5be2b2011e9d5fb4a71067c71",
-        "size": 17407873,
+        "sha256": "520ab6225f6b0afd2e8dcbc67e196a934df44bc7932f86cc2c29796a996c48f4",
+        "size": 17403912,
         "format": "zip",
         "files": [
           "LICENSE.whisper.cpp.txt",
