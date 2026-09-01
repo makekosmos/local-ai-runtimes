@@ -7,17 +7,17 @@ import { assertSequence, validateManifest, verifyEnvelope } from "./validate-man
 
 const bytes = await readFile(new URL("../runtimes.manifest.json", import.meta.url));
 const source = JSON.parse(bytes);
-const fixedNow = new Date("2026-08-30T00:01:00Z");
+const fixedNow = new Date("2026-09-01T00:01:00Z");
 
-test("accepts exact quarantined migration metadata", () => assert.equal(validateManifest(source, { now: fixedNow }), true));
+test("accepts exact released metadata", () => assert.equal(validateManifest(source, { now: fixedNow }), true));
 
 for (const [name, mutate, pattern] of [
   ["duplicate runtime IDs", (m) => m.runtimes.push(structuredClone(m.runtimes[0])), /duplicate runtime id/],
   ["archive traversal", (m) => { m.runtimes[0].entrypoints = ["../runtime.exe"]; }, /unsafe/],
   ["wrong exact size", (m) => { m.runtimes[0].archive.size = 0; }, /exact size/],
   ["bad hash", (m) => { m.runtimes[0].archive.sha256 = "bad"; }, /SHA-256/],
-  ["unpinned legacy URL", (m) => { m.runtimes[0].archive.url = "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/main/x.zip"; }, /historical commit/],
-  ["future timestamp", (m) => { m.generated_at = "2026-08-31T00:00:00Z"; }, /future/],
+  ["mutable release URL", (m) => { m.runtimes[0].archive.url = "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/main/x.zip"; }, /immutable versioned release/],
+  ["future timestamp", (m) => { m.generated_at = "2026-09-02T00:00:00Z"; }, /future/],
 ]) test(name, () => assert.throws(() => {
   const manifest = structuredClone(source);
   mutate(manifest);
@@ -36,7 +36,7 @@ test("envelope binds exact bytes, size, trusted key ID, and signature", () => {
 test("sequence increments exactly once and timestamp increases", () => {
   const candidate = structuredClone(source);
   candidate.sequence += 1;
-  candidate.generated_at = "2026-08-30T00:00:01Z";
+  candidate.generated_at = "2026-09-01T00:00:01Z";
   assert.equal(assertSequence(source, candidate), true);
   candidate.sequence += 1;
   assert.throws(() => assertSequence(source, candidate), /exactly once/);

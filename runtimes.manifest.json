@@ -1,61 +1,57 @@
 {
   "schema_version": 1,
-  "sequence": 1,
-  "generated_at": "2026-08-30T00:00:00Z",
-  "status": "migration-in-progress",
-  "signing_key_id": null,
-  "compatibility_window": {
-    "ends_at": "2026-12-31T23:59:59Z",
-    "policy": "Historical source blobs are download-only compatibility inputs and MUST NOT execute until signature, hash, size, archive, platform, and licence verification succeeds."
-  },
+  "sequence": 2,
+  "generated_at": "2026-08-31T23:45:00Z",
+  "status": "release",
+  "signing_key_id": "runtime-prod-2026-1",
   "runtimes": [
     {
       "id": "whisper-cpu",
-      "version": "1.9.1",
+      "version": "1.9.3",
       "platform": "windows",
       "architecture": "x64",
       "backend": "cpu",
       "accelerator": "none",
       "entrypoints": [
-        "Release/whisper-cli.exe"
+        "Release/whisper-cli.exe",
+        "Release/whisper-server.exe"
       ],
       "archive": {
-        "name": "whisper-cpu-bin-x64-v1.9.1.zip",
-        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-cpu-bin-x64-v1.9.1.zip",
-        "sha256": "7a17d804ab6e0fc992d356b4d3c434764f9191c13f0da6b8c219e7bc19e8ffcf",
-        "size": 1116526,
-        "format": "zip"
+        "name": "whisper-cpu-bin-x64-v1.9.3.zip",
+        "url": "https://github.com/makekosmos/local-ai-runtimes/releases/download/runtime-v1.9.3/whisper-cpu-bin-x64-v1.9.3.zip",
+        "sha256": "2464c8ecdc070ccdba079b363943e979708443180fd6dda12d7d0801beeb5954",
+        "size": 1436012,
+        "format": "zip",
+        "files": [
+          "LICENSE.whisper.cpp.txt",
+          "Release/ggml-base.dll",
+          "Release/ggml-cpu.dll",
+          "Release/ggml.dll",
+          "Release/whisper-cli.exe",
+          "Release/whisper-server.exe",
+          "Release/whisper.dll"
+        ]
       },
-      "source": null,
-      "build": null,
-      "licences": [],
-      "migration_status": "quarantined-legacy-source-blob"
+      "source": {
+        "project": "ggml-org/whisper.cpp",
+        "version": "v1.9.3",
+        "commit": "371b5a7561823ab2bb32142d2751e35e7534727b"
+      },
+      "build": {
+        "recipe": "CMake Release, AVX2, shared libraries, /Brepro",
+        "toolchain": "windows-2025-vs2026; MSVC 19.51; CMake Ninja"
+      },
+      "licences": [
+        {
+          "spdx": "MIT",
+          "path": "LICENSE.whisper.cpp.txt"
+        }
+      ],
+      "migration_status": "release-asset"
     },
     {
       "id": "whisper-vulkan",
-      "version": "1.9.1",
-      "platform": "windows",
-      "architecture": "x64",
-      "backend": "vulkan",
-      "accelerator": "vulkan",
-      "entrypoints": [
-        "Release/whisper-cli.exe"
-      ],
-      "archive": {
-        "name": "whisper-vulkan-bin-x64-v1.9.1.zip",
-        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-vulkan-bin-x64-v1.9.1.zip",
-        "sha256": "d9be5497fae76a35eff0a44141d51bfe30aa8961afe9a13dea7f66b425fa4ca7",
-        "size": 24532865,
-        "format": "zip"
-      },
-      "source": null,
-      "build": null,
-      "licences": [],
-      "migration_status": "quarantined-legacy-source-blob"
-    },
-    {
-      "id": "whisper-vulkan-r2",
-      "version": "1.9.1-r2",
+      "version": "1.9.3",
       "platform": "windows",
       "architecture": "x64",
       "backend": "vulkan",
@@ -65,16 +61,38 @@
         "Release/whisper-server.exe"
       ],
       "archive": {
-        "name": "whisper-vulkan-bin-x64-v1.9.1-r2.zip",
-        "url": "https://raw.githubusercontent.com/makekosmos/local-ai-runtimes/7a025a1007a0c47d55357a40351e65bd20db240a/whisper-vulkan-bin-x64-v1.9.1-r2.zip",
-        "sha256": "c26060f8fe02dce053d73a6806be517c3f06f2ff54fe0f86b69e58225b11fa1e",
-        "size": 25040303,
-        "format": "zip"
+        "name": "whisper-vulkan-bin-x64-v1.9.3.zip",
+        "url": "https://github.com/makekosmos/local-ai-runtimes/releases/download/runtime-v1.9.3/whisper-vulkan-bin-x64-v1.9.3.zip",
+        "sha256": "520ab6225f6b0afd2e8dcbc67e196a934df44bc7932f86cc2c29796a996c48f4",
+        "size": 17403912,
+        "format": "zip",
+        "files": [
+          "LICENSE.whisper.cpp.txt",
+          "Release/ggml-base.dll",
+          "Release/ggml-cpu.dll",
+          "Release/ggml-vulkan.dll",
+          "Release/ggml.dll",
+          "Release/whisper-cli.exe",
+          "Release/whisper-server.exe",
+          "Release/whisper.dll"
+        ]
       },
-      "source": null,
-      "build": null,
-      "licences": [],
-      "migration_status": "quarantined-legacy-source-blob"
+      "source": {
+        "project": "ggml-org/whisper.cpp",
+        "version": "v1.9.3",
+        "commit": "371b5a7561823ab2bb32142d2751e35e7534727b"
+      },
+      "build": {
+        "recipe": "CMake Release, AVX2, GGML_VULKAN=ON, shared libraries, /Brepro",
+        "toolchain": "windows-2025-vs2026; MSVC 19.51; CMake Ninja; Vulkan SDK 1.4.350.0"
+      },
+      "licences": [
+        {
+          "spdx": "MIT",
+          "path": "LICENSE.whisper.cpp.txt"
+        }
+      ],
+      "migration_status": "release-asset"
     }
   ]
 }
