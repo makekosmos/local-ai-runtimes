@@ -2,11 +2,11 @@
 
 This repository is the metadata and verification source for managed local AI runtimes. Runtime binaries are forbidden on the active source branch. New binaries must be immutable, versioned GitHub release assets described by an exact reviewed BOM and a signed manifest envelope.
 
-## Current migration state
+## Current release
 
-The three historical ZIPs were removed from the active source tree. `runtimes.manifest.json` preserves their exact SHA-256, byte size, and full-commit-pinned historical blob URL through **2026-12-31**. They remain `quarantined-legacy-source-blob`: provenance and licence files were not recoverable from the committed archives, so consumers MUST NOT treat them as installable release artifacts.
+The three historical ZIPs were removed from the active source tree. Their full-commit-pinned URLs remain available through **2026-12-31** for migration compatibility, but they are not installable trusted runtimes.
 
-The reviewed `release/runtime-v1.9.3.plan.json` replaces those blobs with reproducible CPU and Vulkan builds from the full `whisper.cpp` v1.9.3 commit. It pins the compiler recipe, Vulkan SDK installer hash, smoke-model bytes, complete archive allowlists, and expected archive hashes. GitHub release immutability is enabled for this repository.
+`runtimes.manifest.json` is the released sequence-2 manifest for immutable tag `runtime-v1.9.3`. It describes reproducible CPU and Vulkan builds from the full `whisper.cpp` v1.9.3 commit and pins the compiler recipe, Vulkan SDK installer hash, complete archive allowlists, exact sizes, and hashes.
 
 ## Local verification
 
@@ -39,9 +39,6 @@ Detailed requirements are in [docs/publication-contract.md](docs/publication-con
 
 Each envelope binds a `key_id`; consumers use an allowlist of public keys with `not_before`, `not_after`, and revoked-sequence rules. Rotation publishes the new public key and overlap policy before the first manifest signed by it. A compromised key is rejected for sequences after the declared revocation boundary while old known-good installs remain available for rollback. Never rewrite a historical envelope or reuse a sequence.
 
-## Remaining acceptance gates
+## Consumer integration
 
-- Merge and run the reviewed production workflow, then verify the immutable signed release after re-download.
-- Implement and verify the consumer contract in Cortex/Dictation through the separate Cortex agent.
-
-Until all gates pass, `status` remains `migration-in-progress` and legacy entries remain quarantined.
+Production workflow run `33454828069` built, smoke-tested, signed, published, re-downloaded, and verified the immutable release. Cortex/Dictation consumer implementation is tracked in `makekosmos/cortex#18`; it remains blocked in hosted CI until Actions receives read access to the organisation's private sibling repositories.
