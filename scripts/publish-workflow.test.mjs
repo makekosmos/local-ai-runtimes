@@ -15,7 +15,7 @@ test("production workflow builds, verifies, signs, and immutably publishes in or
   assert.ok(workflow.indexOf("Preflight immutable release") < workflow.indexOf("RUNTIME_SIGNING_PRIVATE_KEY"));
   assert.ok(workflow.indexOf("gh release create") < workflow.indexOf("gh release upload"));
   assert.ok(workflow.indexOf("gh release upload") < workflow.indexOf("gh release edit"));
-  assert.match(workflow, /immutable-releases/);
+  assert.match(workflow, /\.immutable/);
   for (const line of workflow.split("\n").filter((line) => line.trim().startsWith("uses:"))) {
     assert.match(line, /@[a-f0-9]{40}\s*$/);
   }
