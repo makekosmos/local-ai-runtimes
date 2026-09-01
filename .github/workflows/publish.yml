@@ -158,4 +158,4 @@ jobs:
           gh release download "$tag" --dir verified
           node scripts/verify-release.mjs --manifest verified/runtimes.manifest.json --envelope verified/runtimes.manifest.envelope.json --trusted-keys trusted-keys.json
           python scripts/inspect_archives.py --bom verified/release-bom.v1.json --assets verified
-          test "$(gh api repos/makekosmos/local-ai-runtimes/releases/tags/$tag --jq .immutable)" = true
+          test "$(gh api "repos/makekosmos/local-ai-runtimes/releases/tags/$tag" --jq .immutable)" = true
