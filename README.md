@@ -6,7 +6,7 @@ This repository is the metadata and verification source for managed local AI run
 
 The three historical ZIPs were removed from the active source tree. `runtimes.manifest.json` preserves their exact SHA-256, byte size, and full-commit-pinned historical blob URL through **2026-12-31**. They remain `quarantined-legacy-source-blob`: provenance and licence files were not recoverable from the committed archives, so consumers MUST NOT treat them as installable release artifacts.
 
-No production runtime release or production signature is created by this repository state. The remaining acceptance gates are listed below.
+The reviewed `release/runtime-v1.9.3.plan.json` replaces those blobs with reproducible CPU and Vulkan builds from the full `whisper.cpp` v1.9.3 commit. It pins the compiler recipe, Vulkan SDK installer hash, smoke-model bytes, complete archive allowlists, and expected archive hashes. GitHub release immutability is enabled for this repository.
 
 ## Local verification
 
@@ -24,12 +24,14 @@ Archive validation uses only the Python standard library and rejects traversal, 
 
 ## Publication model
 
-1. Review an immutable BOM pinned to full repository and upstream source commits.
+1. Review the release plan and its full upstream commit, toolchain inputs, allowlists, and expected hashes.
 2. Import/build assets in a clean job; do not accept mutable branch URLs.
 3. Run `inspect_archives.py` and Windows CPU/Vulkan/startup/shutdown smoke tests.
 4. Query GitHub for an existing tag or release and compare the previous signed manifest sequence before any signing secret is exposed.
 5. Sign the exact reviewed manifest bytes in a protected production environment, then immediately verify the envelope with the committed trusted public key.
-6. Create an immutable release and upload only the already-verified bytes. Re-download and re-verify every asset.
+6. Create a draft, upload only the already-verified bytes, and publish it under repository-enforced release immutability. Re-download and re-verify every asset.
+
+Dispatch `Build and publish signed runtimes` with only `bom_ref=<full main commit SHA>`. The Windows build job has no signing secret. The protected `production` job receives `RUNTIME_SIGNING_PRIVATE_KEY` only after source, toolchain, reproducibility, archive, PE, licence, inference, fallback, tag, timestamp, and sequence checks pass.
 
 Detailed requirements are in [docs/publication-contract.md](docs/publication-contract.md). The exact consumer contract to hand to the Cortex agent is in [docs/cortex-agent-contract.md](docs/cortex-agent-contract.md). Do not edit Cortex from this repository.
 
@@ -37,12 +39,9 @@ Detailed requirements are in [docs/publication-contract.md](docs/publication-con
 
 Each envelope binds a `key_id`; consumers use an allowlist of public keys with `not_before`, `not_after`, and revoked-sequence rules. Rotation publishes the new public key and overlap policy before the first manifest signed by it. A compromised key is rejected for sequences after the declared revocation boundary while old known-good installs remain available for rollback. Never rewrite a historical envelope or reuse a sequence.
 
-## Open production acceptance gates
+## Remaining acceptance gates
 
-- Produce provenance-complete, licence-complete replacement archives and pass Windows CPU/Vulkan smoke tests.
-- Enable and verify immutable GitHub releases (current historical releases report `immutable: false`).
-- Approve a production signing key/environment and commit its public-key policy; no production key was used here.
-- Publish the replacement assets, signed manifest, and envelope, then re-download and verify them.
+- Merge and run the reviewed production workflow, then verify the immutable signed release after re-download.
 - Implement and verify the consumer contract in Cortex/Dictation through the separate Cortex agent.
 
 Until all gates pass, `status` remains `migration-in-progress` and legacy entries remain quarantined.

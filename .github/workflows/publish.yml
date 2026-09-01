@@ -1,0 +1,161 @@
+name: Build and publish signed runtimes
+
+on:
+  workflow_dispatch:
+    inputs:
+      bom_ref:
+        description: Full commit SHA containing the reviewed release plan
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Check out reviewed publication code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.bom_ref }}
+          persist-credentials: false
+      - name: Resolve immutable plan inputs
+        id: plan
+        shell: pwsh
+        run: |
+          if ('${{ inputs.bom_ref }}' -notmatch '^[0-9a-f]{40}$' -or (git rev-parse HEAD) -ne '${{ inputs.bom_ref }}') { throw 'bom_ref must be the checked-out full commit SHA' }
+          $plan = Get-Content -Raw release/runtime-v1.9.3.plan.json | ConvertFrom-Json
+          "upstream=$($plan.upstream.commit)" >> $env:GITHUB_OUTPUT
+          "tag=$($plan.release_tag)" >> $env:GITHUB_OUTPUT
+          "vulkan_url=$($plan.vulkan_sdk.url)" >> $env:GITHUB_OUTPUT
+          "vulkan_sha=$($plan.vulkan_sdk.sha256)" >> $env:GITHUB_OUTPUT
+          "model_url=$($plan.smoke_model.url)" >> $env:GITHUB_OUTPUT
+          "model_sha=$($plan.smoke_model.sha256)" >> $env:GITHUB_OUTPUT
+          "model_size=$($plan.smoke_model.size)" >> $env:GITHUB_OUTPUT
+      - name: Check out pinned whisper.cpp source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ggml-org/whisper.cpp
+          ref: ${{ steps.plan.outputs.upstream }}
+          path: whisper
+          persist-credentials: false
+      - name: Install pinned Vulkan SDK
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP vulkan-sdk.exe
+          Invoke-WebRequest '${{ steps.plan.outputs.vulkan_url }}' -OutFile $installer
+          if ((Get-FileHash -Algorithm SHA256 $installer).Hash.ToLowerInvariant() -ne '${{ steps.plan.outputs.vulkan_sha }}') { throw 'Vulkan SDK hash mismatch' }
+          $sdk = Join-Path $env:RUNNER_TEMP VulkanSDK
+          $process = Start-Process -Wait -PassThru $installer -ArgumentList @('install', '--accept-licenses', '--default-answer', '--confirm-command', "--root=$sdk")
+          if ($process.ExitCode -ne 0) { throw "Vulkan SDK installer failed: $($process.ExitCode)" }
+          Remove-Item -LiteralPath $installer -Force
+          "VULKAN_SDK=$sdk" >> $env:GITHUB_ENV
+          (Join-Path $sdk Bin) >> $env:GITHUB_PATH
+      - name: Build reproducible CPU and Vulkan runtimes
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          $common = @('-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DWHISPER_BUILD_TESTS=OFF', '-DWHISPER_BUILD_EXAMPLES=ON', '-DCMAKE_C_FLAGS=/Brepro', '-DCMAKE_CXX_FLAGS=/Brepro', '-DCMAKE_EXE_LINKER_FLAGS=/Brepro', '-DCMAKE_SHARED_LINKER_FLAGS=/Brepro')
+          cmake -S whisper -B whisper/build-cpu @common
+          if ($LASTEXITCODE) { throw 'CPU configure failed' }
+          cmake --build whisper/build-cpu --target whisper-cli whisper-server
+          if ($LASTEXITCODE) { throw 'CPU build failed' }
+          cmake -S whisper -B whisper/build-vulkan @common -DGGML_VULKAN=ON
+          if ($LASTEXITCODE) { throw 'Vulkan configure failed' }
+          cmake --build whisper/build-vulkan --target whisper-cli whisper-server
+          if ($LASTEXITCODE) { throw 'Vulkan build failed' }
+      - name: Smoke-test version, CPU inference, Vulkan capability and fallback
+        shell: pwsh
+        run: |
+          $model = Join-Path $env:RUNNER_TEMP ggml-tiny.en.bin
+          Invoke-WebRequest '${{ steps.plan.outputs.model_url }}' -OutFile $model
+          if ((Get-Item $model).Length -ne [long]'${{ steps.plan.outputs.model_size }}' -or (Get-FileHash -Algorithm SHA256 $model).Hash.ToLowerInvariant() -ne '${{ steps.plan.outputs.model_sha }}') { throw 'smoke model integrity mismatch' }
+          $cpu = 'whisper/build-cpu/bin'
+          $vulkan = 'whisper/build-vulkan/bin'
+          & "$cpu/whisper-cli.exe" --version
+          if ($LASTEXITCODE) { throw 'CPU version smoke failed' }
+          $cpuText = & "$cpu/whisper-cli.exe" -m $model -f whisper/samples/jfk.wav -nt -np -ng 2>&1 | Out-String
+          if ($LASTEXITCODE -or $cpuText -notmatch 'fellow Americans') { throw 'CPU inference smoke failed' }
+          & "$cpu/whisper-server.exe" --help | Out-Null
+          if ($LASTEXITCODE) { throw 'CPU server startup/shutdown smoke failed' }
+          & "$vulkan/whisper-cli.exe" --version
+          if ($LASTEXITCODE) { throw 'Vulkan capability smoke failed' }
+          $fallbackText = & "$vulkan/whisper-cli.exe" -m $model -f whisper/samples/jfk.wav -nt -np -ng 2>&1 | Out-String
+          if ($LASTEXITCODE -or $fallbackText -notmatch 'fellow Americans') { throw 'Vulkan runtime CPU fallback smoke failed' }
+          & "$vulkan/whisper-server.exe" --help | Out-Null
+          if ($LASTEXITCODE) { throw 'Vulkan server startup/shutdown smoke failed' }
+          Remove-Item -LiteralPath $model -Force
+      - name: Package and inspect exact reviewed archives
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          python scripts/package_runtime.py --bin whisper/build-cpu/bin --licence whisper/LICENSE --output out/whisper-cpu-bin-x64-v1.9.3.zip
+          python scripts/package_runtime.py --bin whisper/build-vulkan/bin --licence whisper/LICENSE --output out/whisper-vulkan-bin-x64-v1.9.3.zip --vulkan
+          node scripts/resolve-release.mjs --plan release/runtime-v1.9.3.plan.json --assets out --repository-commit '${{ inputs.bom_ref }}' --bom out/release-bom.v1.json --manifest out/runtimes.manifest.json
+          python scripts/inspect_archives.py --bom out/release-bom.v1.json --assets out
+      - name: Upload verified unsigned release inputs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: runtime-release
+          path: out/
+          if-no-files-found: error
+          retention-days: 1
+
+  sign-and-publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+    steps:
+      - name: Check out reviewed publication code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.bom_ref }}
+          persist-credentials: false
+      - name: Download verified release inputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: runtime-release
+          path: out
+      - name: Preflight immutable release and sequence without signing key
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          tag=$(node -p "require('./release/runtime-v1.9.3.plan.json').release_tag")
+          test "$(git rev-parse HEAD)" = '${{ inputs.bom_ref }}'
+          test "$(gh api -H 'X-GitHub-Api-Version: 2026-03-10' repos/makekosmos/local-ai-runtimes/immutable-releases --jq .enabled)" = true
+          node scripts/release-preflight.mjs --tag "$tag" --previous runtimes.manifest.json --candidate out/runtimes.manifest.json --repository makekosmos/local-ai-runtimes
+          python scripts/inspect_archives.py --bom out/release-bom.v1.json --assets out
+      - name: Sign exact verified manifest
+        env:
+          RUNTIME_SIGNING_PRIVATE_KEY: ${{ secrets.RUNTIME_SIGNING_PRIVATE_KEY }}
+        run: node scripts/sign-manifest.mjs --manifest out/runtimes.manifest.json --trusted-keys trusted-keys.json --out out/runtimes.manifest.envelope.json
+      - name: Publish immutable release and verify downloaded bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          tag=$(node -p "require('./release/runtime-v1.9.3.plan.json').release_tag")
+          created=false
+          cleanup() {
+            if [ "$created" = true ] && gh release view "$tag" --json isDraft --jq .isDraft | grep -qx true; then
+              gh release delete "$tag" --yes --cleanup-tag
+            fi
+          }
+          trap cleanup EXIT
+          gh release create "$tag" --draft --target '${{ inputs.bom_ref }}' --title "Kosmos local AI runtimes 1.9.3"
+          created=true
+          gh release upload "$tag" out/whisper-cpu-bin-x64-v1.9.3.zip out/whisper-vulkan-bin-x64-v1.9.3.zip out/release-bom.v1.json out/runtimes.manifest.json out/runtimes.manifest.envelope.json
+          gh release edit "$tag" --draft=false
+          created=false
+          mkdir verified
+          gh release download "$tag" --dir verified
+          node scripts/verify-release.mjs --manifest verified/runtimes.manifest.json --envelope verified/runtimes.manifest.envelope.json --trusted-keys trusted-keys.json
+          python scripts/inspect_archives.py --bom verified/release-bom.v1.json --assets verified
+          test "$(gh api "repos/makekosmos/local-ai-runtimes/releases/tags/$tag" --jq .immutable)" = true
