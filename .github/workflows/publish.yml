@@ -151,7 +151,7 @@ jobs:
           trap cleanup EXIT
           gh release create "$tag" --draft --target '${{ inputs.bom_ref }}' --title "Kosmos local AI runtimes 1.9.3"
           created=true
-          gh release upload "$tag" out/whisper-*.zip out/release-bom.v1.json out/runtimes.manifest.json out/runtimes.manifest.envelope.json
+          gh release upload "$tag" out/whisper-cpu-bin-x64-v1.9.3.zip out/whisper-vulkan-bin-x64-v1.9.3.zip out/release-bom.v1.json out/runtimes.manifest.json out/runtimes.manifest.envelope.json
           gh release edit "$tag" --draft=false
           created=false
           mkdir verified
