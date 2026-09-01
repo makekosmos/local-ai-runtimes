@@ -6,8 +6,8 @@
   "packageManager": "bun@1.3.14",
   "scripts": {
     "prepare": "node scripts/install-hooks.mjs",
-    "check:metadata": "node scripts/validate-manifest.mjs && node --test scripts/validate-manifest.test.mjs && node scripts/check-json.mjs",
-    "check:archive": "python -m unittest scripts/inspect_archives_test.py && node scripts/dry-run.mjs",
+    "check:metadata": "node scripts/validate-manifest.mjs && node scripts/validate-plan.mjs && node --test scripts/*.test.mjs && node scripts/check-json.mjs",
+    "check:archive": "python -m unittest scripts/inspect_archives_test.py scripts/package_runtime_test.py && node scripts/dry-run.mjs",
     "check": "bun run check:metadata && bun run check:archive"
   }
 }

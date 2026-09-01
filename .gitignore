@@ -1,3 +1,5 @@
+.tmp-*/
+out/
 graphify-out/
 dist/
 .tmp/
